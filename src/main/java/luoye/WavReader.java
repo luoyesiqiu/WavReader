@@ -12,54 +12,61 @@ public class WavReader {
     private DataInputStream dataInputStream;
 
     public DataChunk readDataChunk() {
-        char[] subChunk2ID = new char[4]; //4
-        int subChunk2Size = 0; //4
-        byte[] data = null; //subChunk2Size
+        char[] dataChunkID = new char[4]; //4
+        int dataChunkSize = 0; //4
+        byte[] data = null; //dataChunkSize
         try {
             //big endian
-            subChunk2ID[0] = (char) dataInputStream.readByte();
-            subChunk2ID[1] = (char) dataInputStream.readByte();
-            subChunk2ID[2] = (char) dataInputStream.readByte();
-            subChunk2ID[3] = (char) dataInputStream.readByte();
+            dataChunkID[0] = (char) dataInputStream.readByte();
+            dataChunkID[1] = (char) dataInputStream.readByte();
+            dataChunkID[2] = (char) dataInputStream.readByte();
+            dataChunkID[3] = (char) dataInputStream.readByte();
+            if(!new String(dataChunkID).equals("data")){
+                throw new IOException("read error: It not a data chunk.");
+            }
             //little endian
-            subChunk2Size |= (dataInputStream.readByte() & 0xff);
-            subChunk2Size |= ((dataInputStream.readByte() << 8) & 0xff00);
-            subChunk2Size |= ((dataInputStream.readByte() << 16) & 0xff0000);
-            subChunk2Size |= ((dataInputStream.readByte() << 24) & 0xff000000);
-            data = new byte[subChunk2Size];
-            for (int i = 0; i < subChunk2Size; i++) {
+            dataChunkSize |= (dataInputStream.readByte() & 0xff);
+            dataChunkSize |= ((dataInputStream.readByte() << 8) & 0xff00);
+            dataChunkSize |= ((dataInputStream.readByte() << 16) & 0xff0000);
+            dataChunkSize |= ((dataInputStream.readByte() << 24) & 0xff000000);
+            data = new byte[dataChunkSize];
+            for (int i = 0; i < dataChunkSize; i++) {
                 data[i] = dataInputStream.readByte();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return new DataChunk(subChunk2ID, subChunk2Size, data);
+        return new DataChunk(dataChunkID, dataChunkSize, data);
     }
 
     public FormatChunk readFormatChunk() {
-        char[] subChunk1ID = new char[4]; //4
-        int subChunk1Size = 0; //4
+        char[] formatChunkID = new char[4]; //4
+        int formatChunkSize = 0; //4
         int audioFormat = 0; //2
         int numChannels = 0; //2
         int sampleRate = 0; //4
         int byteRate = 0; //4
         int blockAlign = 0; //2
         int bitsPerSample = 0; //2
-        int subChunk1SizeTotal = 0;
+        int formatChunkSizeTotal = 0;
         try {
             //big endian
-            subChunk1ID[0] = (char) dataInputStream.readByte();
-            subChunk1ID[1] = (char) dataInputStream.readByte();
-            subChunk1ID[2] = (char) dataInputStream.readByte();
-            subChunk1ID[3] = (char) dataInputStream.readByte();
-            //little endian
-            subChunk1Size |= (dataInputStream.readByte() & 0xff);
-            subChunk1Size |= ((dataInputStream.readByte() << 8) & 0xff00);
-            subChunk1Size |= ((dataInputStream.readByte() << 16) & 0xff0000);
-            subChunk1Size |= ((dataInputStream.readByte() << 24) & 0xff000000);
+            formatChunkID[0] = (char) dataInputStream.readByte();
+            formatChunkID[1] = (char) dataInputStream.readByte();
+            formatChunkID[2] = (char) dataInputStream.readByte();
+            formatChunkID[3] = (char) dataInputStream.readByte();
 
-            subChunk1SizeTotal = subChunk1Size;
+            if(!new String(formatChunkID).startsWith("fmt")){
+                throw new IOException("read error: It not a format chunk.");
+            }
+            //little endian
+            formatChunkSize |= (dataInputStream.readByte() & 0xff);
+            formatChunkSize |= ((dataInputStream.readByte() << 8) & 0xff00);
+            formatChunkSize |= ((dataInputStream.readByte() << 16) & 0xff0000);
+            formatChunkSize |= ((dataInputStream.readByte() << 24) & 0xff000000);
+
+            formatChunkSizeTotal = formatChunkSize;
 
             //little endian
             audioFormat |= (dataInputStream.readByte() & 0xff);
@@ -90,32 +97,37 @@ public class WavReader {
             bitsPerSample |= (dataInputStream.readByte() & 0xff);
             bitsPerSample |= ((dataInputStream.readByte() << 8) & 0xff00);
 
-            subChunk1SizeTotal -= 16;
-            if (subChunk1SizeTotal > 0) {
-                dataInputStream.skipBytes(subChunk1SizeTotal);
+            formatChunkSizeTotal -= 16;
+            if (formatChunkSizeTotal > 0) {
+                dataInputStream.skipBytes(formatChunkSizeTotal);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new FormatChunk(subChunk1ID, subChunk1Size, audioFormat, numChannels, sampleRate, byteRate, blockAlign, bitsPerSample);
+        return new FormatChunk(formatChunkID, formatChunkSize, audioFormat, numChannels, sampleRate, byteRate, blockAlign, bitsPerSample);
     }
+
     public RIFFChunk readRIFFChunk() {
         char[] chunkId = new char[4]; //4
         int chunkSize = 0; //4
         char[] chunkFormat = new char[4]; //4
         try {
-            //big
+            //big endian
             chunkId[0] = (char) dataInputStream.readByte();
             chunkId[1] = (char) dataInputStream.readByte();
             chunkId[2] = (char) dataInputStream.readByte();
             chunkId[3] = (char) dataInputStream.readByte();
-            //little
+
+            if(!new String(chunkId).startsWith("RIFF")){
+                throw new IOException("read error: It not a riff chunk.");
+            }
+            //little endian
             chunkSize |= (dataInputStream.readByte() & 0xff);
             chunkSize |= ((dataInputStream.readByte() << 8) & 0xff00);
             chunkSize |= ((dataInputStream.readByte() << 16) & 0xff0000);
             chunkSize |= ((dataInputStream.readByte() << 24) & 0xff000000);
-            //big
+            //big endian
             chunkFormat[0] = (char) dataInputStream.readByte();
             chunkFormat[1] = (char) dataInputStream.readByte();
             chunkFormat[2] = (char) dataInputStream.readByte();
@@ -157,8 +169,8 @@ public class WavReader {
 
     public static class FormatChunk {
 
-        private char[] subChunk1ID; //4
-        private int subChunk1Size; //4
+        private char[] formatChunkID; //4
+        private int formatChunkSize; //4
         private int audioFormat; //2
         private int numChannels; //2
         private int sampleRate; //4
@@ -166,9 +178,9 @@ public class WavReader {
         private int blockAlign; //2
         private int bitsPerSample; //2
 
-        public FormatChunk(char[] subChunk1ID, int subChunk1Size, int audioFormat, int numChannels, int sampleRate, int byteRate, int blockAlign, int bitsPerSample) {
-            this.subChunk1ID = subChunk1ID;
-            this.subChunk1Size = subChunk1Size;
+        public FormatChunk(char[] formatChunkID, int formatChunkSize, int audioFormat, int numChannels, int sampleRate, int byteRate, int blockAlign, int bitsPerSample) {
+            this.formatChunkID = formatChunkID;
+            this.formatChunkSize = formatChunkSize;
             this.audioFormat = audioFormat;
             this.numChannels = numChannels;
             this.sampleRate = sampleRate;
@@ -177,12 +189,12 @@ public class WavReader {
             this.bitsPerSample = bitsPerSample;
         }
 
-        public char[] getSubChunk1ID() {
-            return subChunk1ID;
+        public char[] getFormatChunkID() {
+            return formatChunkID;
         }
 
-        public int getSubChunk1Size() {
-            return subChunk1Size;
+        public int getFormatChunkSize() {
+            return formatChunkSize;
         }
 
 
@@ -218,34 +230,41 @@ public class WavReader {
 
     public static class DataChunk {
 
-        public DataChunk(char[] subChunk2ID, int subChunk2Size, byte[] data) {
-            this.subChunk2ID = subChunk2ID;
-            this.subChunk2Size = subChunk2Size;
+        public DataChunk(char[] dataChunkID, int dataChunkSize, byte[] data) {
+            this.dataChunkID = dataChunkID;
+            this.dataChunkSize = dataChunkSize;
             this.data = data;
         }
 
-
-        public char[] getSubChunk2ID() {
-            return subChunk2ID;
+        public char[] getDataChunkID() {
+            return dataChunkID;
         }
 
-        public int getSubChunk2Size() {
-            return subChunk2Size;
+        public int getDataChunkSize() {
+            return dataChunkSize;
         }
 
         public byte[] getData() {
             return data;
         }
 
-        private char[] subChunk2ID; //4
-        private int subChunk2Size; //4
-        private byte[] data; //subChunk2Size
+        private char[] dataChunkID; //4
+        private int dataChunkSize; //4
+        private byte[] data; //dataChunkSize
     }
 
+    public void close() {
+        if (dataInputStream != null) {
+            try {
+                dataInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public WavReader(String file) throws IOException {
         this.mFile = file;
-
         dataInputStream = new DataInputStream(new FileInputStream(mFile));
     }
 
