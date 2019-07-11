@@ -6,7 +6,6 @@ import java.io.*;
  * @author luoyesiqiu
  */
 public class WavReader {
-    private String mFile;
     private RandomAccessFile randomAccessFile;
 
     public void seekToStart(){
@@ -279,8 +278,7 @@ public class WavReader {
     }
 
     public WavReader(String file) throws IOException {
-        this.mFile = file;
-        randomAccessFile = new RandomAccessFile(mFile,"r");
+        randomAccessFile = new RandomAccessFile(file,"r");
     }
 
     private WavReader() {
