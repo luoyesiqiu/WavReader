@@ -8,8 +8,8 @@ import java.io.*;
 public class WavReader {
     private RandomAccessFile randomAccessFile;
 
-    public void seekToStart(){
-        if(randomAccessFile!=null){
+    public void seekToStart() {
+        if (randomAccessFile != null) {
             try {
                 randomAccessFile.seek(0);
             } catch (IOException e) {
@@ -18,8 +18,8 @@ public class WavReader {
         }
     }
 
-    public void skipBytes(int bytes){
-        if(randomAccessFile!=null){
+    public void skipBytes(int bytes) {
+        if (randomAccessFile != null) {
             try {
                 randomAccessFile.skipBytes(bytes);
             } catch (IOException e) {
@@ -28,15 +28,72 @@ public class WavReader {
         }
     }
 
-    public void read(byte[] buffer,int pos,int len){
-        if(randomAccessFile!=null){
+    /**
+     * Skip  header of whole WAV file,includes RIFF chunk , Format chunk and extra chunk.
+     */
+    public void skipHeader() {
+        char[] extraChunkID = new char[4];
+        int extraChunkSize = 0;
+        if (randomAccessFile != null) {
             try {
-                randomAccessFile.read(buffer,pos,len);
+                //skip RIFF chunk and Format chunk
+                randomAccessFile.skipBytes(36);
+                do {
+                    extraChunkSize = 0;
+                    //big endian
+                    extraChunkID[0] = (char) randomAccessFile.readByte();
+                    extraChunkID[1] = (char) randomAccessFile.readByte();
+                    extraChunkID[2] = (char) randomAccessFile.readByte();
+                    extraChunkID[3] = (char) randomAccessFile.readByte();
+                    //little endian
+                    extraChunkSize |= (randomAccessFile.readByte() & 0xff);
+                    extraChunkSize |= ((randomAccessFile.readByte() << 8) & 0xff00);
+                    extraChunkSize |= ((randomAccessFile.readByte() << 16) & 0xff0000);
+                    extraChunkSize |= ((randomAccessFile.readByte() << 24) & 0xff000000);
+                    if (!new String(extraChunkID).equals("data")) {
+                        randomAccessFile.skipBytes(extraChunkSize);
+                    }
+                }
+                while (!new String(extraChunkID).equals("data"));
+            } catch (IOException e) {
+
+            }
+        }
+    }
+
+    public int read(byte[] buffer, int pos, int len) {
+        if (randomAccessFile != null) {
+            try {
+                return randomAccessFile.read(buffer, pos, len);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        return -1;
     }
+
+    public int read(byte[] buffer) {
+        if (randomAccessFile != null) {
+            try {
+                return randomAccessFile.read(buffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return -1;
+    }
+
+    public byte readByte() {
+        if (randomAccessFile != null) {
+            try {
+                return randomAccessFile.readByte();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return -1;
+    }
+
     public DataChunk readDataChunk() {
         char[] dataChunkID = new char[4]; //4
         int dataChunkSize = 0; //4
@@ -55,16 +112,16 @@ public class WavReader {
                 dataChunkSize |= ((randomAccessFile.readByte() << 8) & 0xff00);
                 dataChunkSize |= ((randomAccessFile.readByte() << 16) & 0xff0000);
                 dataChunkSize |= ((randomAccessFile.readByte() << 24) & 0xff000000);
-                if(!new String(dataChunkID).equals("data")) {
+                if (!new String(dataChunkID).equals("data")) {
                     randomAccessFile.skipBytes(dataChunkSize);
                 }
             }
-            while(!new String(dataChunkID).equals("data"));
+            while (!new String(dataChunkID).equals("data"));
 
             byte[] buf = new byte[8192];
             int len = -1;
-            while((len = randomAccessFile.read(buf))!=-1){
-                byteArrayOutputStream.write(buf,0,len);
+            while ((len = randomAccessFile.read(buf)) != -1) {
+                byteArrayOutputStream.write(buf, 0, len);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,7 +147,7 @@ public class WavReader {
             formatChunkID[2] = (char) randomAccessFile.readByte();
             formatChunkID[3] = (char) randomAccessFile.readByte();
 
-            if(!new String(formatChunkID).equals("fmt ")){
+            if (!new String(formatChunkID).equals("fmt ")) {
                 throw new IOException("read error: It not a format chunk.");
             }
             //little endian
@@ -152,7 +209,7 @@ public class WavReader {
             chunkId[2] = (char) randomAccessFile.readByte();
             chunkId[3] = (char) randomAccessFile.readByte();
 
-            if(!new String(chunkId).startsWith("RIFF")){
+            if (!new String(chunkId).startsWith("RIFF")) {
                 throw new IOException("read error: It not a riff chunk.");
             }
             //little endian
@@ -297,7 +354,7 @@ public class WavReader {
     }
 
     public WavReader(String file) throws IOException {
-        randomAccessFile = new RandomAccessFile(file,"r");
+        randomAccessFile = new RandomAccessFile(file, "r");
     }
 
     private WavReader() {

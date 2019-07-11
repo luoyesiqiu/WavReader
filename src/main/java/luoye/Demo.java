@@ -27,6 +27,15 @@ public class Demo {
         System.out.println("DataChunkID: " + new String(dataChunk.getDataChunkID()));
         System.out.println("DataChunkSize: " + dataChunk.getDataChunkSize());
         System.out.println("data length: " + dataChunk.getData().length);
+        wavReader.seekToStart();
+        wavReader.skipHeader();
+        int len = 0;
+        byte[] buf = new byte[1024];
+        int sum = 0;
+        while ((len = wavReader.read(buf)) != -1) {
+            sum += len;
+        }
+        System.out.println("verify data length: " + sum);
         wavReader.close();
     }
 }
