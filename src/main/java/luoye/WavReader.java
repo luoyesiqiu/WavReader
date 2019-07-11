@@ -1,5 +1,6 @@
 package luoye;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class WavReader {
     public DataChunk readDataChunk() {
         char[] dataChunkID = new char[4]; //4
         int dataChunkSize = 0; //4
-        byte[] data = null; //dataChunkSize
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
             //discard non-data chunk
             do {
@@ -35,15 +36,16 @@ public class WavReader {
             }
             while(!new String(dataChunkID).equals("data"));
 
-            data = new byte[dataChunkSize];
-            for (int i = 0; i < dataChunkSize; i++) {
-                data[i] = dataInputStream.readByte();
+            byte[] buf = new byte[8192];
+            int len = -1;
+            while((len = dataInputStream.read(buf))!=-1){
+                byteArrayOutputStream.write(buf,0,len);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return new DataChunk(dataChunkID, dataChunkSize, data);
+        return new DataChunk(dataChunkID, dataChunkSize, byteArrayOutputStream.toByteArray());
     }
 
     public FormatChunk readFormatChunk() {
