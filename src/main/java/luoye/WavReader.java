@@ -16,19 +16,25 @@ public class WavReader {
         int dataChunkSize = 0; //4
         byte[] data = null; //dataChunkSize
         try {
-            //big endian
-            dataChunkID[0] = (char) dataInputStream.readByte();
-            dataChunkID[1] = (char) dataInputStream.readByte();
-            dataChunkID[2] = (char) dataInputStream.readByte();
-            dataChunkID[3] = (char) dataInputStream.readByte();
-            if(!new String(dataChunkID).equals("data")){
-                throw new IOException("read error: It not a data chunk.");
+            //discard non-data chunk
+            do {
+                dataChunkSize = 0;
+                //big endian
+                dataChunkID[0] = (char) dataInputStream.readByte();
+                dataChunkID[1] = (char) dataInputStream.readByte();
+                dataChunkID[2] = (char) dataInputStream.readByte();
+                dataChunkID[3] = (char) dataInputStream.readByte();
+                //little endian
+                dataChunkSize |= (dataInputStream.readByte() & 0xff);
+                dataChunkSize |= ((dataInputStream.readByte() << 8) & 0xff00);
+                dataChunkSize |= ((dataInputStream.readByte() << 16) & 0xff0000);
+                dataChunkSize |= ((dataInputStream.readByte() << 24) & 0xff000000);
+                if(!new String(dataChunkID).equals("data")) {
+                    dataInputStream.skipBytes(dataChunkSize);
+                }
             }
-            //little endian
-            dataChunkSize |= (dataInputStream.readByte() & 0xff);
-            dataChunkSize |= ((dataInputStream.readByte() << 8) & 0xff00);
-            dataChunkSize |= ((dataInputStream.readByte() << 16) & 0xff0000);
-            dataChunkSize |= ((dataInputStream.readByte() << 24) & 0xff000000);
+            while(!new String(dataChunkID).equals("data"));
+
             data = new byte[dataChunkSize];
             for (int i = 0; i < dataChunkSize; i++) {
                 data[i] = dataInputStream.readByte();
