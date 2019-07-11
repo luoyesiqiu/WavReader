@@ -65,7 +65,7 @@ public class WavReader {
             formatChunkID[2] = (char) dataInputStream.readByte();
             formatChunkID[3] = (char) dataInputStream.readByte();
 
-            if(!new String(formatChunkID).startsWith("fmt")){
+            if(!new String(formatChunkID).equals("fmt ")){
                 throw new IOException("read error: It not a format chunk.");
             }
             //little endian
