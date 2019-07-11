@@ -18,6 +18,25 @@ public class WavReader {
         }
     }
 
+    public void skipBytes(int bytes){
+        if(randomAccessFile!=null){
+            try {
+                randomAccessFile.skipBytes(bytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void read(byte[] buffer,int pos,int len){
+        if(randomAccessFile!=null){
+            try {
+                randomAccessFile.read(buffer,pos,len);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public DataChunk readDataChunk() {
         char[] dataChunkID = new char[4]; //4
         int dataChunkSize = 0; //4
