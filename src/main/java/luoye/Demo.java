@@ -7,11 +7,7 @@ public class Demo {
     public static void main(String[] args) throws IOException {
         String file = "audio/demo.wav";
         WavReader wavReader = new WavReader(file);
-        WavReader.RIFFChunk riffChunk = wavReader.readRIFFChunk();
-        System.out.println(">>[RIFFChunk]<<");
-        System.out.println("ChunkID: " + new String(riffChunk.getChunkID()));
-        System.out.println("ChunkSize: " + riffChunk.getChunkSize());
-        System.out.println("Format: " + new String(riffChunk.getFormat()));
+
         WavReader.FormatChunk formatChunk = wavReader.readFormatChunk();
         System.out.println(">>[FormatChunk]<<");
         System.out.println("FormatChunkID: " + new String(formatChunk.getFormatChunkID()));
@@ -22,20 +18,19 @@ public class Demo {
         System.out.println("ByteRate: " + formatChunk.getByteRate());
         System.out.println("BlockAlign: " + formatChunk.getBlockAlign());
         System.out.println("BitsPerSample: " + formatChunk.getBitsPerSample());
+
         WavReader.DataChunk dataChunk = wavReader.readDataChunk();
         System.out.println(">>[DataChunk]<<");
         System.out.println("DataChunkID: " + new String(dataChunk.getDataChunkID()));
         System.out.println("DataChunkSize: " + dataChunk.getDataChunkSize());
         System.out.println("data length: " + dataChunk.getData().length);
-        wavReader.seekToStart();
-        wavReader.skipHeader();
-        int len = 0;
-        byte[] buf = new byte[1024];
-        int sum = 0;
-        while ((len = wavReader.read(buf)) != -1) {
-            sum += len;
-        }
-        System.out.println("verify data length: " + sum);
+
+        WavReader.RIFFChunk riffChunk = wavReader.readRIFFChunk();
+        System.out.println(">>[RIFFChunk]<<");
+        System.out.println("ChunkID: " + new String(riffChunk.getChunkID()));
+        System.out.println("ChunkSize: " + riffChunk.getChunkSize());
+        System.out.println("Format: " + new String(riffChunk.getFormat()));
+
         wavReader.close();
     }
 }
