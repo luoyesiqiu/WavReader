@@ -4,9 +4,9 @@
 
 Wav文件通常有三个区块
 
-* RIFF块
-* Format块
-* Data块
+* RIFF 块
+* Format 块
+* Data 块
 
 ![结构](./image/wavformat.png)
 
