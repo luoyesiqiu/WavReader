@@ -95,8 +95,9 @@ public class WavReader {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
             randomAccessFile.seek(0);
-            //sizeof(RIFFChunk) + sizeof(FormatChunk)
-            randomAccessFile.skipBytes(8 + 28);
+            //skip RIFFChunk
+            randomAccessFile.skipBytes(12);
+            this.readFormatChunk();
             skipExtraChunk();
             //big endian
             dataChunkID[0] = (char) randomAccessFile.readByte();
