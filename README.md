@@ -2,6 +2,12 @@
 
 ## Wav文件结构
 
+Wav文件通常有三个区块
+
+* RIFF块
+* Format块
+* Data块
+
 ![结构](./image/wavformat.png)
 
 |Positions |	Sample Value |	Description|
@@ -19,6 +25,11 @@
 |35-36 |	16 	|Bits per sample|
 |37-40 |	"data" |	"data" chunk header. Marks the beginning of the data section.|
 |41-44 |	File size (data) |	Size of the data section. |
+
+上面的结构图是比较常见的Wav结构,但是在某些Wav文件中会有一点不同.例如:
+
+* 在某些Wav文件中,Format块中会有更多的字段,所以要根据第17-20字节来读取Format块真正长度,进而做相应的处理
+* 在某些Wav文件中,紧跟在Format块后面的并不是Data块,还有可能是其他的可选区段.Wav每个区块都以ChunkID,ChunkLength开始,它们的大小都为4字节,总共8字节,可选区段也不例外.所以对可选区块可以根据它们的ChunkID,ChunkLength来判断和处理.
 
 ## 使用
 

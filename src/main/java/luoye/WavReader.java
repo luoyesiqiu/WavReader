@@ -97,6 +97,7 @@ public class WavReader {
             randomAccessFile.seek(0);
             //skip RIFFChunk
             randomAccessFile.skipBytes(12);
+            //skip FormatChunk
             this.readFormatChunk();
             skipExtraChunk();
             //big endian
