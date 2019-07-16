@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public class Demo {
     public static void main(String[] args) throws IOException {
-        String file = "audio/demo2.wav";
+        String file = "audio/demo.wav";
         WavReader wavReader = new WavReader(file);
 
         WavReader.FormatChunk formatChunk = wavReader.readFormatChunk();
@@ -32,5 +32,6 @@ public class Demo {
         System.out.println("Format: " + new String(riffChunk.getFormat()));
 
         wavReader.close();
+
     }
 }
